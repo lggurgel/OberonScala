@@ -52,7 +52,7 @@ object JVMCodeGenerator extends CodeGenerator {
     val visitor = new EvalExpressionVisitor(interpreter)
 
     constants.map {
-      case (constant) => 
+      case (constant) =>
         val v = constant.exp.accept(visitor)
 
         v match {
@@ -77,36 +77,36 @@ object JVMCodeGenerator extends CodeGenerator {
     }
   }
 
-def generateProcedures(procedures: List[Procedure], cw: ClassWriter): Unit = {
-  procedures.foreach((p: Procedure) => {
-    var argumentTypes = ""
-    p.args.foreach((t: FormalArg) => {
-      val argumentType = getTypeDescriptor(t.argumentType)
-      argumentTypes = argumentTypes + argumentType;
+  def generateProcedures(procedures: List[Procedure], cw: ClassWriter): Unit = {
+    procedures.foreach((p: Procedure) => {
+      var argumentTypes = ""
+      p.args.foreach((t: FormalArg) => {
+        val argumentType = getTypeDescriptor(t.argumentType)
+        argumentTypes = argumentTypes + argumentType;
+      })
+
+      val returnDescriptorArgumentType = getTypeDescriptor(p.returnType.get)
+      val descriptor = "(" + argumentTypes + ")" + returnDescriptorArgumentType
+
+      val mv = cw.visitMethod(ACC_PUBLIC + ACC_STATIC, p.name, descriptor, null, null)
+      mv.visitCode()
+
+      val returnType = p.returnType match {
+        case Some(IntegerType) => mv.visitInsn(IRETURN)
+        case Some(RealType) => mv.visitInsn(DRETURN)
+        case Some(BooleanType) => mv.visitInsn(RETURN)
+        case Some(CharacterType) => mv.visitInsn(IRETURN)
+        case Some(StringType) => mv.visitInsn(IRETURN)
+        case Some(UndefinedType) => mv.visitInsn(RETURN)
+        case None          => mv.visitInsn(RETURN)
+      }
+
+      // please, read Section 3.2 of the ASM tutorial
+      mv.visitMaxs(0, 0) // it also closes the '}'
+
+      mv.visitEnd()
     })
-
-    val returnDescriptorArgumentType = getTypeDescriptor(p.returnType.get)
-    val descriptor = "(" + argumentTypes + ")" + returnDescriptorArgumentType
-
-    val mv = cw.visitMethod(ACC_PUBLIC + ACC_STATIC, p.name, descriptor, null, null)
-    mv.visitCode()
-
-    val returnType = p.returnType match {
-      case Some(IntegerType) => mv.visitInsn(IRETURN)
-      case Some(RealType) => mv.visitInsn(DRETURN)
-      case Some(BooleanType) => mv.visitInsn(RETURN)
-      case Some(CharacterType) => mv.visitInsn(IRETURN)
-      case Some(StringType) => mv.visitInsn(IRETURN)
-      case Some(UndefinedType) => mv.visitInsn(RETURN)
-      case None          => mv.visitInsn(RETURN)
-    }
-
-    // please, read Section 3.2 of the ASM tutorial
-    mv.visitMaxs(0, 0) // it also closes the '}'
-
-    mv.visitEnd()
-  })
-}
+  }
 
   /*
    * Generate the body of a main method. This implementation
@@ -171,4 +171,3 @@ def generateProcedures(procedures: List[Procedure], cw: ClassWriter): Unit = {
 
 
 }
-
